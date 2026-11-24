@@ -6,7 +6,7 @@
  * Constants & helpers
  * ------------------------------------------------------------------ */
 const D = Math.PI / 180, TWO_PI = Math.PI * 2;
-const T0 = -400000, T1 = 200000, STEP = 1000;           // years from today
+const T0 = -400000, T1 = 100000, STEP = 1000;           // years from today
 const N = (T1 - T0) / STEP + 1;
 const S0 = 1361;                                          // solar constant, W/m²
 const COL = { e: '#b28cff', o: '#3fe0a5', p: '#ffbf47', ins: '#ff7a85', ice: '#6cc4ff' };
