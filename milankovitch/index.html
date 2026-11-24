@@ -106,21 +106,18 @@
 <section id="glaciers" class="wrap">
   <div class="section-head">
     <h2>What it means for glaciers</h2>
-    <p>Ice sheets grow when northern summers are too cool to melt the winter's snow. This map shows the Northern Hemisphere from above, with ice extent following the moment you picked on the time slider.</p>
+    <p>Ice sheets grow when northern summers are too cool to melt the winter's snow. This map shows the Northern Hemisphere from above, with ice extent estimated from the Vostok temperature at the moment you picked on the time slider. Colder means more ice.</p>
   </div>
   <div class="glacier-grid">
     <div class="card">
-      <div class="card-title">Northern Hemisphere ice <span class="seg" role="group" aria-label="Ice source">
-        <button class="seg-btn on" data-src="model">Model</button>
-        <button class="seg-btn" data-src="ref">Ice-age pattern</button>
-      </span></div>
+      <div class="card-title">Northern Hemisphere ice</div>
       <div class="canvas-box square map"><canvas id="map" aria-label="Polar map of Northern Hemisphere ice sheets"></canvas></div>
     </div>
     <div class="card">
       <div class="card-title">At this moment</div>
       <div class="stats" id="glStats"></div>
       <div class="callout" id="glCallout"></div>
-      <p class="note">"Model" is a simple teaching model driven by the insolation curve you are viewing. "Ice-age pattern" is a schematic of the real glacial/interglacial rhythm (about 100,000-year saw-tooth cycles). The map is stylised, not a reconstruction.</p>
+      <p class="note">Ice extent is a rough estimate: the colder Vostok was, the more ice. Antarctic temperature stands in for global climate, and the map is stylised, not a reconstruction.</p>
     </div>
   </div>
 </section>
@@ -165,8 +162,8 @@
       <p>Switch to <em>Only: P</em>, then <em>Only: E</em>, then <em>Only: T</em> and compare the insolation chart. Precession gives the biggest swings every ~21,000 years, tilt gives a slower, steadier 41,000-year rhythm, and eccentricity on its own barely moves it. Eccentricity matters mostly because it scales precession's effect.</p>
     </details>
     <details>
-      <summary>2. Which combination best matches the ice-age pattern?</summary>
-      <p>No single cycle does, and the combination of all three gets only part of the way. The real ice record is dominated by a ~100,000-year rhythm, even though 100,000-year eccentricity is the weakest direct forcing. Scientists call this the "100,000-year problem". Feedbacks involving ice-sheet dynamics, ocean circulation and greenhouse gases (CO₂) are thought to amplify and pace the response. Try the Model vs. the Ice-age pattern line in the Ice chart.</p>
+      <summary>2. Which combination best matches the Vostok temperatures?</summary>
+      <p>Try each combination and compare the sunlight chart to the blue Vostok line. No single cycle matches it, and all three together only get part of the way. The Vostok record is dominated by a ~100,000-year rhythm: slow cooling, then a fast warming. Yet 100,000-year eccentricity is the weakest direct forcing. Scientists call this the "100,000-year problem". Feedbacks involving ice sheets, ocean circulation and greenhouse gases (CO₂) are thought to amplify and pace the response.</p>
     </details>
     <details>
       <summary>3. If only orbits controlled climate, what would happen next?</summary>
@@ -179,12 +176,12 @@
   </div>
 
   <div class="card prose small">
-    <h3>About the model &amp; its limits</h3>
+    <h3>About the data &amp; its limits</h3>
     <ul>
       <li>Eccentricity, tilt and precession are <strong>simplified sums of the main periodic terms</strong>, tuned to match today's values and typical ranges. For research-grade values use published solutions (e.g. Laskar et al. 2004; Berger &amp; Loutre).</li>
       <li>Insolation is the <strong>daily-mean sunlight at the June solstice</strong>, calculated from the standard formula, at the chosen latitude (default 65°N).</li>
-      <li>The ice "Model" is a deliberately simple toy: ice grows slowly when summer sunlight is low and melts faster when it is high. Its settings were tuned by hand to resemble the ice-age rhythm, so treat it as <strong>qualitative</strong>: it has no CO₂ or ocean feedbacks.</li>
-      <li>The "Ice-age pattern" is a <strong>schematic</strong> saw-tooth built from the approximate dates of the last five glacial terminations (≈14, 130, 248, 337 and 424 thousand years ago). It is not measured data. To compare against real records (e.g. EPICA Dome C, Vostok or the LR04 benthic stack), edit <code>REFERENCE</code> in <code>app.js</code>.</li>
+      <li>The blue line is <strong>real data</strong>: the Vostok ice-core temperature record from Antarctica (Petit et al. 1999; NOAA Paleoclimatology data, deuterium-based, GT4 age scale). It is smoothed over about 3,000 years and shown as change from today. The record ends today, so there is no line for the future.</li>
+      <li>Vostok is <strong>Antarctic temperature</strong>, used here as a stand-in for global climate. The map's ice extent is a rough estimate from that temperature (colder means more ice) and ignores that real ice sheets lag behind temperature.</li>
       <li>Inspired by the original Milankovitch visualization from UW–Madison CIMSS.</li>
     </ul>
   </div>
@@ -196,6 +193,7 @@
 </footer>
 
 <div id="tip" class="tip" role="tooltip" hidden></div>
+<script src="data.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

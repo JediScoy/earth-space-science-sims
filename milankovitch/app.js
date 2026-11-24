@@ -16,10 +16,6 @@ const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const mod = (a, n) => ((a % n) + n) % n;
 
-/* Reference ice-age pattern (SCHEMATIC): approximate dates of glacial terminations,
- * years from today. Replace with real data (e.g. EPICA / LR04) if desired. */
-const REFERENCE = { terminations: [-533000, -424000, -337000, -248000, -130000, -14000] };
-
 /* ------------------------------------------------------------------ *
  * Orbital elements — simplified sums of the main periodic terms
  * ------------------------------------------------------------------ */
@@ -59,11 +55,10 @@ function insolation(e, eps, varpiDeg, latDeg, lamDeg = 90) {
 const state = {
   t: 0, lam: 90, exag: 8, lat: 65,
   sc: { e: true, o: true, p: true },
-  playing: false, spin: false, speed: 30, iceSrc: 'model'
+  playing: false, spin: false, speed: 30
 };
 
-const series = { E: null, O: null, W: null, P: null, Qall: null, Q: null, Vmodel: null, Vref: null };
-let norm = { mean: 0, std: 1 };
+const series = { E: null, O: null, W: null, P: null, Qall: null, Q: null, V: null };   // V = Vostok temperature change (deg C), NaN in the future
 
 function eff(t) {                                           // effective elements given the toggles
   return {
@@ -77,41 +72,6 @@ function qAt(t, sc, lat) {
   return insolation(e, o, w, lat);
 }
 
-/* ------------------------------------------------------------------ *
- * Ice models
- * ------------------------------------------------------------------ */
-function refIce(t) {                                        // schematic saw-tooth, 0..1 (null in the future)
-  if (t > 0) return null;
-  const B = REFERENCE.terminations;
-  if (t >= B[B.length - 1]) return 0.04;
-  let i = 0;
-  while (i < B.length - 2 && t >= B[i + 1]) i++;
-  const a = B[i], b = B[i + 1], u = clamp((t - a) / (b - a), 0, 1);
-  if (u < 0.08) return 0.04 + 0.1 * u / 0.08 * 0;           // interglacial
-  const grow = 0.04 + 0.96 * Math.pow((Math.min(u, 0.92) - 0.08) / 0.84, 0.85);
-  return u < 0.92 ? grow : grow * (1 - (u - 0.92) / 0.08);  // fast deglaciation
-}
-
-/* Toy relaxation-oscillator ice model (in the spirit of Paillard 1998): ice grows slowly while northern
- * summers are not too warm; once the ice sheet is large, a warm-summer peak can trigger fast melting. */
-const ICE = { TAU_G: 47000, TAU_M: 6400, K: 2.1, F_GROW: 0.98, V_HI: 0.73, F_TERM: 0.14, V_LO: 0.045 };
-function iceModel(sc, lat) {
-  const out = new Float32Array(N);
-  let V = 0.3, melting = false;
-  for (let t = -1000000; t <= T1; t += STEP) {
-    const F = (qAt(t, sc, lat) - norm.mean) / norm.std;           // + = warm summer
-    if (!melting && V > ICE.V_HI && F > ICE.F_TERM) melting = true;
-    else if (melting && V < ICE.V_LO) melting = false;
-    if (melting) V -= V * (1 - Math.exp(-STEP / ICE.TAU_M));
-    else {
-      const eff = 1 / (1 + Math.exp(ICE.K * (F - ICE.F_GROW)));   // growth throttled by warm summers
-      V += (1 - V) * eff * (1 - Math.exp(-STEP / ICE.TAU_G));
-    }
-    if (t >= T0) out[(t - T0) / STEP] = V;
-  }
-  return out;
-}
-
 function computeStatic() {
   series.E = new Float32Array(N); series.O = new Float32Array(N); series.W = new Float32Array(N); series.P = new Float32Array(N);
   for (let i = 0; i < N; i++) {
@@ -119,29 +79,29 @@ function computeStatic() {
     series.E[i] = orbit.ecc(t); series.O[i] = orbit.obl(t); series.W[i] = orbit.varpi(t);
     series.P[i] = series.E[i] * Math.sin(series.W[i] * D);
   }
-  series.Vref = new Float32Array(N);
-  for (let i = 0; i < N; i++) { const v = refIce(T0 + i * STEP); series.Vref[i] = v == null ? NaN : v; }
+  series.V = new Float32Array(N).fill(NaN);        // real Vostok record (see data.js), today and earlier
+  const dt = window.VOSTOK_DT || [];
+  for (let i = 0; i < N && i < dt.length; i++) series.V[i] = dt[i];
 }
 
 function computeScenario() {
   const all = { e: true, o: true, p: true };
   series.Qall = new Float32Array(N);
-  let s = 0, s2 = 0;
-  for (let i = 0; i < N; i++) { const q = qAt(T0 + i * STEP, all, state.lat); series.Qall[i] = q; s += q; s2 += q * q; }
-  norm.mean = s / N; norm.std = Math.sqrt(s2 / N - norm.mean ** 2) || 1;
+  for (let i = 0; i < N; i++) series.Qall[i] = qAt(T0 + i * STEP, all, state.lat);
   series.Q = new Float32Array(N);
   for (let i = 0; i < N; i++) series.Q[i] = qAt(T0 + i * STEP, state.sc, state.lat);
-  series.Vmodel = iceModel(state.sc, state.lat);
 }
 
 const idxOf = t => clamp((t - T0) / STEP, 0, N - 1);
 function sample(arr, t) {
   const f = idxOf(t), i = Math.floor(f), j = Math.min(N - 1, i + 1), k = f - i;
+  if (k === 0) return arr[i];
   return arr[i] * (1 - k) + arr[j] * k;
 }
+/** Ice amount 0..1 estimated from Vostok temperature: 0 at today's temperature or warmer, 1 at 8 deg C colder. */
 function iceAt(t) {
-  if (state.iceSrc === 'ref') { const v = refIce(t); return v == null ? sample(series.Vmodel, t) : v; }
-  return sample(series.Vmodel, t);
+  const dT = sample(series.V, Math.min(t, 0));
+  return clamp(-dT / 8, 0, 1);
 }
 
 /* ------------------------------------------------------------------ *
@@ -312,7 +272,7 @@ const lanes = [
   { id: 'obl', key: 'o', title: 'Tilt', sub: 'axis angle · ~41 kyr', color: COL.o, data: () => series.O, range: [21.8, 24.8], fmt: v => v.toFixed(2) + '°' },
   { id: 'pre', key: 'p', title: 'Precession index', sub: 'e · sin ϖ · ~19–23 kyr', color: COL.p, data: () => series.P, range: [-0.062, 0.062], fmt: v => v.toFixed(3) },
   { id: 'ins', title: 'Summer sunlight', sub: 'June-solstice, daily mean', color: COL.ins, data: () => series.Q, ghost: () => series.Qall, range: [400, 570], fmt: v => v.toFixed(0) + ' W/m²', lat: true },
-  { id: 'ice', title: 'Ice volume', sub: 'model vs. ice-age pattern', color: COL.ice, data: () => series.Vmodel, ghost: () => series.Vref, ghostDash: true, range: [0, 1.05], fmt: v => Math.round(v * 100) + '%', big: true }
+  { id: 'ice', title: 'Temperature at Vostok, Antarctica', sub: 'real ice-core record · smoothed', color: COL.ice, data: () => series.V, range: [-10, 4], fmt: v => Number.isNaN(v) ? 'no data' : (v > 0.05 ? '+' : '') + v.toFixed(1) + '°C', big: true }
 ];
 
 function buildLanes() {
@@ -329,7 +289,7 @@ function buildLanes() {
       </div>
       <div class="chartbox"><canvas class="base"></canvas><canvas class="over"></canvas></div>
       ${L.id === 'ins' ? '<div class="legend"><span style="--c:' + COL.ins + '">Selected cycles</span><span class="dash" style="--c:#8e99b8">All three cycles</span></div>' : ''}
-      ${L.id === 'ice' ? '<div class="legend"><span style="--c:' + COL.ice + '">Model (from sunlight above)</span><span class="dash" style="--c:#e8ecf8">Ice-age pattern (schematic)</span></div>' : ''}`;
+      ${L.id === 'ice' ? '<div class="legend"><span style="--c:' + COL.ice + '">Change from today (°C). Cold dips are ice ages. The record ends today.</span></div>' : ''}`;
     lanesEl.appendChild(el);
     L.el = el; L.base = $('.base', el); L.over = $('.over', el); L.box = $('.chartbox', el); L.val = $('[data-v]', el);
     const pick = ev => {
@@ -402,7 +362,7 @@ function drawLaneOver(L) {
   ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(x, PADY - 2); ctx.lineTo(x, h - 12); ctx.stroke();
   const v = sample(L.data(), state.t);
-  if (L.yOf) {
+  if (L.yOf && !Number.isNaN(v)) {
     ctx.fillStyle = L.color; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(x, L.yOf(v), 4.5, 0, TWO_PI); ctx.fill(); ctx.stroke();
   }
@@ -435,7 +395,7 @@ function drawMap() {
   ctx.clearRect(0, 0, w, h);
   const R = Math.min(w, h) / 2 - 6, cx = w / 2, cy = h / 2;
   const proj = (lon, lat) => { const r = (90 - lat) / 60 * R, a = lon * D; return [cx + r * Math.sin(a), cy - r * Math.cos(a)]; };
-  const V = Math.min(1.1, iceAt(state.t) / 0.8);   // 1 = full glacial maximum
+  const V = iceAt(state.t);   // 0..1, estimated from Vostok temperature
 
   ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, R, 0, TWO_PI); ctx.clip();
   const og = ctx.createRadialGradient(cx, cy, 0, cx, cy, R);
@@ -480,11 +440,11 @@ function drawMap() {
   ctx.fillText('Greenland', proj(-40, 74)[0], proj(-40, 74)[1] + 4);
 
   // stats
-  const sea = -Math.round(120 * Math.min(V, 1));
+  const sea = -Math.round(120 * V);
   const marginLaur = Math.round(90 - V * reach(-95));
   const marginFen = Math.round(90 - V * reach(15));
   $('#glStats').innerHTML = `
-    <div class="stat"><span class="k">Ice volume</span><span class="v">${Math.round(Math.min(V, 1) * 100)}%</span><span class="s">of glacial maximum</span></div>
+    <div class="stat"><span class="k">Estimated ice</span><span class="v">${Math.round(Math.min(V, 1) * 100)}%</span><span class="s">of glacial maximum</span></div>
     <div class="stat"><span class="k">Sea level</span><span class="v">${sea === 0 ? '≈ today' : sea + ' m'}</span><span class="s">water locked in ice</span></div>
     <div class="stat"><span class="k">N. American ice edge</span><span class="v">${V < 0.05 ? '—' : '~' + marginLaur + '°N'}</span><span class="s">Laurentide sheet</span></div>
     <div class="stat"><span class="k">European ice edge</span><span class="v">${V < 0.05 ? '—' : '~' + marginFen + '°N'}</span><span class="s">Scandinavian sheet</span></div>`;
@@ -494,6 +454,7 @@ function drawMap() {
     ? `❄ The Great Lakes region (~44°N) would be buried under ice sheet here. The Great Lakes themselves only formed as the ice melted back.`
     : V > 0.5 ? 'The ice edge is advancing south, but the Great Lakes region is still just ice-free in this scenario.'
     : 'The Great Lakes region (~44°N) is ice-free. Only Greenland and the Arctic hold ice at this moment.';
+  if (state.t > 0) co.textContent += ' The Vostok record ends today, so the map shows today.';
 }
 
 /* ------------------------------------------------------------------ *
@@ -570,10 +531,6 @@ function init() {
     $('#spinBtn').textContent = state.spin ? '❚❚ Pause' : '▶ Spin through a year';
   });
 
-  $$('.seg-btn').forEach(b => b.addEventListener('click', () => {
-    state.iceSrc = b.dataset.src;
-    $$('.seg-btn').forEach(x => x.classList.toggle('on', x === b)); drawMap();
-  }));
 
   // tooltips
   const tips = {
@@ -605,6 +562,6 @@ function init() {
   })(last);
 }
 
-window.MILANKOVITCH = { state, orbit, series, insolation, refIce, ICE, computeScenario, drawLanesBase, refresh };
+window.MILANKOVITCH = { state, orbit, series, insolation, computeScenario, drawLanesBase, refresh };
 init();
 })();
