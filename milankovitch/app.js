@@ -558,8 +558,7 @@ function init() {
     scenarioChanged();
   }));
 
-  $('#exag').addEventListener('input', ev => { state.exag = +ev.target.value; $('#exagVal').textContent = state.exag; drawOrbit(); });
-  const seasonEl = $('#season');
+    const seasonEl = $('#season');
   const seasonLabel = () => {
     const l = state.lam, names = ['Spring equinox', 'Summer solstice', 'Autumn equinox', 'Winter solstice'];
     const near = names.findIndex((_, i) => Math.abs(mod(l - i * 90 + 180, 360) - 180) < 6);

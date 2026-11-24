@@ -36,11 +36,6 @@
         <div class="card-title">Top view of Earth's orbit <button class="info" data-tip="orbit" aria-label="About this view">?</button></div>
         <div class="canvas-box square"><canvas id="orbit" aria-label="Top view of Earth's orbit around the Sun"></canvas></div>
         <div class="row">
-          <label class="ctl">Orbit stretch ×<b id="exagVal">8</b>
-            <input id="exag" type="range" min="1" max="15" step="1" value="8">
-          </label>
-        </div>
-        <div class="row">
           <label class="ctl">Season (position in orbit): <b id="seasonName"></b>
             <input id="season" type="range" min="0" max="359" step="1" value="90">
           </label>
@@ -48,7 +43,7 @@
         <div class="row">
           <button id="spinBtn" class="chip">▶ Spin through a year</button>
         </div>
-        <p class="note" id="stretchNote">Real orbits are almost circular, so the shape is stretched here to make it visible.</p>
+        <p class="note" id="stretchNote">Real orbits are almost circular. The shape is stretched 8 times here so you can see the change.</p>
       </div>
 
       <div class="card">
@@ -75,7 +70,7 @@
           <button class="chip" data-jump="-21000">Last Glacial Max</button>
           <button class="chip" data-jump="-125000">Last interglacial</button>
           <button class="chip" data-jump="-240000">Interglacial ~240 ka</button>
-          <button class="chip" data-jump="50000">+50,000 yr</button>
+          <button class="chip" data-jump="100000">+100,000 yr</button>
           <label class="inline muted">Speed
             <select id="speed">
               <option value="10">Slow</option>
@@ -175,7 +170,7 @@
     </details>
     <details>
       <summary>3. If only orbits controlled climate, what would happen next?</summary>
-      <p>Drag the slider to <em>+50,000 yr</em>. Eccentricity is heading toward a very low value, which flattens the precession swings, so northern summers stay relatively warm for a long time. Published studies suggest orbital forcing alone would not bring the next glacial period for tens of thousands of years, and that today's greenhouse-gas levels could delay it further. Orbits set the <em>pacing</em>, but they are not the only control.</p>
+      <p>Drag the slider to <em>+100,000 yr</em>. Eccentricity is heading toward a very low value, which flattens the precession swings, so northern summers stay relatively warm for a long time. Published studies suggest orbital forcing alone would not bring the next glacial period for tens of thousands of years, and that today's greenhouse-gas levels could delay it further. Orbits set the <em>pacing</em>, but they are not the only control.</p>
     </details>
     <details>
       <summary>4. Today's warming is not an orbital effect. How can you tell?</summary>
