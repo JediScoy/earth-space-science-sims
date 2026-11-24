@@ -6,7 +6,7 @@
  * Constants & helpers
  * ------------------------------------------------------------------ */
 const D = Math.PI / 180, TWO_PI = Math.PI * 2;
-const T0 = -800000, T1 = 200000, STEP = 1000;           // years from today
+const T0 = -400000, T1 = 200000, STEP = 1000;           // years from today
 const N = (T1 - T0) / STEP + 1;
 const S0 = 1361;                                          // solar constant, W/m²
 const COL = { e: '#b28cff', o: '#3fe0a5', p: '#ffbf47', ins: '#ff7a85', ice: '#6cc4ff' };
@@ -18,7 +18,7 @@ const mod = (a, n) => ((a % n) + n) % n;
 
 /* Reference ice-age pattern (SCHEMATIC): approximate dates of glacial terminations,
  * years from today. Replace with real data (e.g. EPICA / LR04) if desired. */
-const REFERENCE = { terminations: [-880000, -790000, -710000, -621000, -533000, -424000, -337000, -248000, -130000, -14000] };
+const REFERENCE = { terminations: [-533000, -424000, -337000, -248000, -130000, -14000] };
 
 /* ------------------------------------------------------------------ *
  * Orbital elements — simplified sums of the main periodic terms
