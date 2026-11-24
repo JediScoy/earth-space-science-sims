@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Milankovitch Cycles Explorer</title>
+<meta name="description" content="An interactive explorer showing how changes in Earth's orbit — eccentricity, tilt and precession — pace the ice ages.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Interactive · Earth science</p>
+    <h1>Milankovitch Cycles <span>Explorer</span></h1>
+    <p class="lede">Slow, regular changes in Earth's orbit change <em>where and when</em> sunlight lands. Over tens of thousands of years, that nudges ice sheets to grow and shrink. Turn each cycle on and off, scrub through 1 million years, and watch the ice respond.</p>
+    <div class="hero-cta">
+      <a class="btn primary" href="#lab">Open the lab</a>
+      <a class="btn" href="#learn">How it works</a>
+    </div>
+  </div>
+</header>
+
+<main>
+<!-- ============ LAB ============ -->
+<section id="lab" class="wrap">
+  <div class="section-head">
+    <h2>The orbit lab</h2>
+    <p>Three orbital cycles, one time slider. Everything below — the orbit, Earth's tilt, the charts and the ice map — follows the same moment in time.</p>
+  </div>
+
+  <div class="lab">
+    <!-- left: space views -->
+    <aside class="viz">
+      <div class="card">
+        <div class="card-title">Top view of Earth's orbit <button class="info" data-tip="orbit" aria-label="About this view">?</button></div>
+        <div class="canvas-box square"><canvas id="orbit" aria-label="Top view of Earth's orbit around the Sun"></canvas></div>
+        <div class="row">
+          <label class="ctl">Orbit stretch ×<b id="exagVal">8</b>
+            <input id="exag" type="range" min="1" max="15" step="1" value="8">
+          </label>
+        </div>
+        <div class="row">
+          <label class="ctl">Season (position in orbit): <b id="seasonName"></b>
+            <input id="season" type="range" min="0" max="359" step="1" value="90">
+          </label>
+        </div>
+        <div class="row">
+          <button id="spinBtn" class="chip">▶ Spin through a year</button>
+        </div>
+        <p class="note" id="stretchNote">Real orbits are almost circular, so the shape is stretched here to make it visible.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Earth's tilt <button class="info" data-tip="tilt" aria-label="About this view">?</button></div>
+        <div class="canvas-box wide"><canvas id="tilt" aria-label="Earth's axial tilt"></canvas></div>
+        <p class="note" id="tiltNote"></p>
+      </div>
+    </aside>
+
+    <!-- right: timeline -->
+    <div class="timeline">
+      <div class="card sticky">
+        <div class="card-title">Time machine</div>
+        <div class="time-row">
+          <button id="playBtn" class="round" aria-label="Play time">▶</button>
+          <div class="time-main">
+            <div class="time-label"><span id="timeLabel">Today</span></div>
+            <input id="time" type="range" aria-label="Time in thousands of years" step="1">
+          </div>
+        </div>
+        <div class="row chips">
+          <span class="muted">Jump to</span>
+          <button class="chip" data-jump="0">Today</button>
+          <button class="chip" data-jump="-21000">Last Glacial Max</button>
+          <button class="chip" data-jump="-125000">Last interglacial</button>
+          <button class="chip" data-jump="-400000">Warm spell ~400 ka</button>
+          <button class="chip" data-jump="50000">+50,000 yr</button>
+          <label class="inline muted">Speed
+            <select id="speed">
+              <option value="10">Slow</option>
+              <option value="30" selected>Medium</option>
+              <option value="100">Fast</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="toggles" role="group" aria-label="Which orbital cycles are active">
+          <span class="muted">Which cycles are active?</span>
+          <button class="tog e on" data-k="e" aria-pressed="true"><i></i>Eccentricity</button>
+          <button class="tog o on" data-k="o" aria-pressed="true"><i></i>Tilt</button>
+          <button class="tog p on" data-k="p" aria-pressed="true"><i></i>Precession</button>
+          <span class="presets muted">Only:
+            <button class="chip sm" data-only="e">E</button>
+            <button class="chip sm" data-only="o">T</button>
+            <button class="chip sm" data-only="p">P</button>
+            <button class="chip sm" data-only="all">All</button>
+          </span>
+        </div>
+        <p class="note">A cycle switched off is frozen at its present-day value, so you can see what each one does by itself.</p>
+      </div>
+
+      <div id="lanes" class="lanes"></div>
+
+      <div class="card readouts" id="readouts"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ GLACIERS ============ -->
+<section id="glaciers" class="wrap">
+  <div class="section-head">
+    <h2>What it means for glaciers</h2>
+    <p>Ice sheets grow when northern summers are too cool to melt the winter's snow. This map shows the Northern Hemisphere from above, with ice extent following the moment you picked on the time slider.</p>
+  </div>
+  <div class="glacier-grid">
+    <div class="card">
+      <div class="card-title">Northern Hemisphere ice <span class="seg" role="group" aria-label="Ice source">
+        <button class="seg-btn on" data-src="model">Model</button>
+        <button class="seg-btn" data-src="ref">Ice-age pattern</button>
+      </span></div>
+      <div class="canvas-box square map"><canvas id="map" aria-label="Polar map of Northern Hemisphere ice sheets"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">At this moment</div>
+      <div class="stats" id="glStats"></div>
+      <div class="callout" id="glCallout"></div>
+      <p class="note">"Model" is a simple teaching model driven by the insolation curve you are viewing. "Ice-age pattern" is a schematic of the real glacial/interglacial rhythm (about 100,000-year saw-tooth cycles). The map is stylised, not a reconstruction.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LEARN ============ -->
+<section id="learn" class="wrap">
+  <div class="section-head">
+    <h2>How it works</h2>
+    <p>Milutin Milanković, a Serbian mathematician, astronomer and engineer, worked out in the early 1900s that regular changes in Earth's orbit pace the ice ages.</p>
+  </div>
+
+  <div class="cards3">
+    <article class="card topic e">
+      <h3><i></i>Eccentricity</h3>
+      <p class="big">≈ 100,000 &amp; 413,000 yr</p>
+      <p>How stretched the orbit is, from nearly circular (<b>0.005</b>) to slightly oval (<b>0.058</b>). Today it is about <b>0.017</b>.</p>
+      <p>Alone it changes total sunlight by only a fraction of a percent, but it controls how strongly precession can matter.</p>
+    </article>
+    <article class="card topic o">
+      <h3><i></i>Tilt (obliquity)</h3>
+      <p class="big">≈ 41,000 yr</p>
+      <p>The angle of Earth's axis ranges between about <b>22.1°</b> and <b>24.5°</b>. Today it is <b>23.4°</b> and slowly decreasing.</p>
+      <p>More tilt means stronger seasons and more summer sunlight at high latitudes, which helps melt ice.</p>
+    </article>
+    <article class="card topic p">
+      <h3><i></i>Precession</h3>
+      <p class="big">≈ 19,000–23,000 yr</p>
+      <p>A slow wobble, like a spinning top, plus a rotating orbit. It decides <em>which season</em> happens when Earth is closest to the Sun.</p>
+      <p>Today Earth is closest in early January (northern winter). About 11,000 years ago that was reversed.</p>
+    </article>
+  </div>
+
+  <div class="card prose">
+    <h3>Why watch summer at 65°N?</h3>
+    <p>Large continents sit at those latitudes in the north (Canada, Scandinavia, Siberia). If summers are cool, winter snow survives, piles up and slowly becomes ice. Once ice covers the land it reflects sunlight and cools things further. This is a feedback that amplifies the small orbital nudge. Milanković's key idea: <strong>it's the summer sunlight at high northern latitudes that decides whether ice sheets grow or retreat.</strong></p>
+  </div>
+
+  <div class="card prose">
+    <h3>Explore &amp; think</h3>
+    <details>
+      <summary>1. Which single cycle changes summer sunlight at 65°N the most?</summary>
+      <p>Switch to <em>Only: P</em>, then <em>Only: E</em>, then <em>Only: T</em> and compare the insolation chart. Precession gives the biggest swings every ~21,000 years, tilt gives a slower, steadier 41,000-year rhythm, and eccentricity on its own barely moves it. Eccentricity matters mostly because it scales precession's effect.</p>
+    </details>
+    <details>
+      <summary>2. Which combination best matches the ice-age pattern?</summary>
+      <p>No single cycle does, and the combination of all three gets only part of the way. The real ice record is dominated by a ~100,000-year rhythm, even though 100,000-year eccentricity is the weakest direct forcing. Scientists call this the "100,000-year problem". Feedbacks involving ice-sheet dynamics, ocean circulation and greenhouse gases (CO₂) are thought to amplify and pace the response. Try the Model vs. the Ice-age pattern line in the Ice chart.</p>
+    </details>
+    <details>
+      <summary>3. If only orbits controlled climate, what would happen next?</summary>
+      <p>Drag the slider to <em>+50,000 yr</em>. Eccentricity is heading toward a very low value, which flattens the precession swings, so northern summers stay relatively warm for a long time. Published studies suggest orbital forcing alone would not bring the next glacial period for tens of thousands of years, and that today's greenhouse-gas levels could delay it further. Orbits set the <em>pacing</em>, but they are not the only control.</p>
+    </details>
+    <details>
+      <summary>4. Today's warming is not an orbital effect. How can you tell?</summary>
+      <p>Over the last century, orbital changes have been tiny and, if anything, a very slight cooling push. Move the slider between −5,000 yr and +5,000 yr: the orbital curves barely move on the scale of a human lifetime, while observed warming over 150 years is very fast.</p>
+    </details>
+  </div>
+
+  <div class="card prose small">
+    <h3>About the model &amp; its limits</h3>
+    <ul>
+      <li>Eccentricity, tilt and precession are <strong>simplified sums of the main periodic terms</strong>, tuned to match today's values and typical ranges. For research-grade values use published solutions (e.g. Laskar et al. 2004; Berger &amp; Loutre).</li>
+      <li>Insolation is the <strong>daily-mean sunlight at the June solstice</strong>, calculated from the standard formula, at the chosen latitude (default 65°N).</li>
+      <li>The ice "Model" is a deliberately simple toy: ice grows slowly when summer sunlight is low and melts faster when it is high. Its settings were tuned by hand to resemble the ice-age rhythm, so treat it as <strong>qualitative</strong>: it has no CO₂ or ocean feedbacks.</li>
+      <li>The "Ice-age pattern" is a <strong>schematic</strong> saw-tooth built from the approximate dates of the last nine glacial terminations (≈14, 130, 248, 337, 424, 533, 621, 710 and 790 thousand years ago). It is not measured data. To compare against real records (e.g. EPICA Dome C, Vostok or the LR04 benthic stack), edit <code>REFERENCE</code> in <code>app.js</code>.</li>
+      <li>Inspired by the original Milankovitch visualization from UW–Madison CIMSS.</li>
+    </ul>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">Milankovitch Cycles Explorer · A teaching tool. Values are approximate.</div>
+</footer>
+
+<div id="tip" class="tip" role="tooltip" hidden></div>
+<script src="app.js"></script>
+</body>
+</html>
